@@ -1,13 +1,15 @@
-# --- SECRETS & DATA (NEVER COMMIT) ---
-backups/
-inventory/hosts.ini
-.env
-*.key
-*.pem
-id_ed25519
-id_ed25519.pub
+# --- SECURITY ---
+# Ignore the Variable file containing cleartext passwords
+inventory/group_vars/all.yml
 
-# --- SYSTEM NOISE ---
+# Ignore the Backups folder (contains raw configs with secrets)
+backups/
+
+# Ignore any local environment files
+.env
+*.env
+
+# --- SYSTEM JUNK ---
 .DS_Store
+*.swp
 *.retry
-*.log

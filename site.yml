@@ -1,0 +1,64 @@
+---
+# ==========================================
+# PLAY 1: GLOBAL BASELINE (ALL NODES)
+# Target: Titan Core & Sentry
+# Mission: Hardening, Connectivity, Engine
+# ==========================================
+- name: GLOBAL SYSTEM BASELINE
+  hosts: titan_nodes
+  become: yes
+  gather_facts: yes
+  tags: ['base']
+
+  roles:
+    - role: common
+      tags: ['common']
+
+    - role: firewall
+      tags: ['security', 'network']
+
+    - role: docker
+      tags: ['docker']
+
+    - role: backup
+      tags: ['ops', 'backup']
+
+# ==========================================
+# PLAY 2: TITAN CORE OPERATIONS (CORE ONLY)
+# Target: Titan (192.168.1.240)
+# Mission: Heavy Compute, Storage, Analysis
+# ==========================================
+- name: TITAN CORE OPERATIONS
+  hosts: titan
+  become: yes
+  gather_facts: yes
+  tags: ['core']
+
+  roles:
+    - role: security  # GVM & Recon (Moved here to protect Sentry)
+      tags: ['security', 'gvm']
+
+    # Uncomment as you verify they are ready
+    # - role: observability
+    #   tags: ['monitor']
+
+    # - role: financial
+    #   tags: ['app', 'aurum']
+
+    # - role: media
+    #   tags: ['app', 'media']
+
+# ==========================================
+# PLAY 3: SENTRY OPERATIONS (EDGE ONLY)
+# Target: Sentry (192.168.1.84)
+# Mission: Computer Vision & NVR
+# ==========================================
+- name: SENTRY EDGE OPERATIONS
+  hosts: sentry
+  become: yes
+  gather_facts: yes
+  tags: ['sentry']
+
+  roles:
+    - role: frigate
+      tags: ['nvr', 'vision']

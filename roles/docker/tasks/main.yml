@@ -19,13 +19,29 @@
     repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
     state: present
 
-- name: Install Docker Engine
+- name: Update Apt Cache (Force)
   apt:
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install Docker Engine
+  package:
     name:
       - docker-ce
       - docker-ce-cli
       - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
     state: present
+  ignore_errors: yes  # Failsafe for Sentry (Mac hardware quirks)
+  register: docker_install_result
+
+# Fallback for Edge Nodes (like Sentry) if docker-ce isn't found
+- name: Install Docker.io (Fallback)
+  package:
+    name: docker.io
+    state: present
+  when: docker_install_result.failed
 
 - name: Ensure Docker is running
   service:
@@ -41,5 +57,11 @@
 - name: Create the tribe_net for utility services (Minecraft/Media)
   community.docker.docker_network:
     name: tribe_net
+    driver: bridge
+    state: present
+
+- name: Create Secure Vault Network
+  docker_network:
+    name: vault_net
     driver: bridge
     state: present
