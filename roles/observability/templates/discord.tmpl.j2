@@ -1,0 +1,14 @@
+{% raw %}
+{{ define "discord.title" }}
+[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+{{ end }}
+
+{{ define "discord.message" }}
+{{ range .Alerts }}
+**Alert:** {{ .Annotations.summary }}
+**Description:** {{ .Annotations.description }}
+**Severity:** {{ .Labels.severity }}
+**Graph:** [Link]({{ .GeneratorURL }})
+{{ end }}
+{{ end }}
+{% endraw %}

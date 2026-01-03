@@ -1,0 +1,44 @@
+---
+- name: Update apt cache before installing attack tools
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install core attack tools (Nmap, Netcat)
+  ansible.builtin.apt:
+    name:
+      - nmap
+      - netcat-traditional
+    state: present
+    update_cache: yes
+
+# 4. GOVERNOR: KALI UPDATE SUSPENSION PROTOCOL
+- name: Configure APT to disable automatic updates (The Governor)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20no-update
+    content: |
+      APT::Periodic::Update-Package-Lists "0";
+      APT::Periodic::Unattended-Upgrade "0";
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - attack_base
+    - opsec_governor
+
+- name: HARDENING - Purge Heavy Services (Efficiency Mandate)
+  apt:
+    name:
+      - postgresql
+      - postgresql-16
+      - gvm
+      - greenbone-security-assistant
+      - openvas-scanner
+    state: absent
+    purge: yes
+  tags: ['hardening', 'purge']
+
+- name: HARDENING - Autoremove Unused Dependencies
+  apt:
+    autoremove: yes
+  tags: ['hardening', 'purge']

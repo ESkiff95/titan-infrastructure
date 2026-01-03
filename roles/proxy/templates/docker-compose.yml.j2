@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    # FIX: Force API version for compatibility
+    environment:
+      - DOCKER_API_VERSION=1.44
+    command:
+      - "--configFile=/etc/traefik/traefik.yml"
+      - "--providers.docker.network=vault_net"
+      # REMOVED: Insecure Skip Verify (Security Hardening Applied)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - {{ deploy_root }}/proxy/config/traefik.yml:/etc/traefik/traefik.yml:ro
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    networks:
+      - vault_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.vault.local`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.middlewares.prom-auth.basicauth.users={{ traefik_auth }}"
+      # GLOBAL AUTH DEFINITION
+      - "traefik.http.middlewares.vault-auth.basicauth.users={{ traefik_auth }}"
+
+networks:
+  vault_net:
+    name: vault_net

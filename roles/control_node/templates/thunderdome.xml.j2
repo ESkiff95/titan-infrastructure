@@ -1,0 +1,10 @@
+<network>
+  <name>thunderdome-bridge</name>
+  <forward mode='nat'/>
+  <bridge name='virbr1' stp='on' delay='0'/>
+  <ip address='172.16.99.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='172.16.99.10' end='172.16.99.254'/>
+    </dhcp>
+  </ip>
+</network>

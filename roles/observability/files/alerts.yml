@@ -1,0 +1,29 @@
+groups:
+  - name: TitanHardwareAlerts
+    rules:
+      - alert: HostHighCpuTemperature
+        expr: node_hwmon_temp_celsius > 75
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Host CPU Temperature High (instance {{ $labels.instance }})"
+          description: "CPU temperature is above 75°C for more than 5 minutes."
+
+      - alert: HostHighIOWait
+        expr: avg by (instance) (rate(node_cpu_seconds_total{mode='iowait'}[5m])) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High I/O Wait detected (instance {{ $labels.instance }})"
+          description: "I/O Wait is above 10% for 5 minutes. IOPS ceiling reached."
+
+      - alert: HostLowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low Disk Space (instance {{ $labels.instance }})"
+          description: "Free space on the root partition is below 10%."

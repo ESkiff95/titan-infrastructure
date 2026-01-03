@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      - PUID={{ ansible_user_uid }}
+      - PGID={{ ansible_user_gid }}
+      - TZ=America/Chicago
+    volumes:
+      - {{ media_base_path }}/config/sonarr:/config
+      - {{ media_base_path }}/data/tv:/tv
+      - {{ media_base_path }}/data/downloads:/downloads
+    networks:
+      - vault_net
+    labels:
+      - "traefik.enable=true"
+      # FIX 1: Correct Hostname
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.vault.local`)"
+      - "traefik.http.routers.sonarr.entrypoints=web"
+      # FIX 2: Global Auth Middleware
+      - "traefik.http.routers.sonarr.middlewares=vault-auth@docker"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      - PUID={{ ansible_user_uid }}
+      - PGID={{ ansible_user_gid }}
+      - TZ=America/Chicago
+    volumes:
+      - {{ media_base_path }}/config/radarr:/config
+      - {{ media_base_path }}/data/movies:/movies
+      - {{ media_base_path }}/data/downloads:/downloads
+    networks:
+      - vault_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.vault.local`)"
+      - "traefik.http.routers.radarr.entrypoints=web"
+      - "traefik.http.routers.radarr.middlewares=vault-auth@docker"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+
+  sabnzbd:
+    image: linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    restart: unless-stopped
+    environment:
+      - PUID={{ ansible_user_uid }}
+      - PGID={{ ansible_user_gid }}
+      - TZ=America/Chicago
+    volumes:
+      - {{ media_base_path }}/config/sabnzbd:/config
+      - {{ media_base_path }}/data/downloads:/downloads
+    networks:
+      - vault_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.vault.local`)"
+      - "traefik.http.routers.sabnzbd.entrypoints=web"
+      - "traefik.http.routers.sabnzbd.middlewares=vault-auth@docker"
+      - "traefik.http.services.sabnzbd.loadbalancer.server.port=8080"
+
+networks:
+  vault_net:
+    external: true

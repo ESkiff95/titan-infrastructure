@@ -1,0 +1,17 @@
+log:
+  level: INFO
+api:
+  insecure: true # Dashboard enabled on 8080 (temporary debug)
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: vault_net

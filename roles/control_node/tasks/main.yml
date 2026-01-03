@@ -1,0 +1,95 @@
+---
+- name: "STEP 1: WEAPONRY - Install Core CLI, Virtualization & Ansible Deps"
+  ansible.builtin.dnf:
+    name:
+      - zoxide
+      - fzf
+      - eza
+      - bat
+      - neovim
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+      - libvirt
+      - virt-manager
+      - timeshift
+      - keepassxc
+      - python3-libvirt  # REQUIRED: Dependency for community.libvirt module
+    state: present
+    update_cache: yes
+  tags: [core, packages]
+
+- name: "STEP 1.1: Ensure Virtualization Services are Active"
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - docker
+    - libvirtd
+  tags: [core, services]
+
+- name: "STEP 2: ALIAS DOCTRINE - Inject Operational Shortcuts"
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED: TITAN ALIAS DOCTRINE"
+    block: |
+      # Titan Operational Aliases
+      alias update='sudo dnf update -y && flatpak update -y'
+      alias clean='sudo dnf autoremove -y && flatpak uninstall --unused'
+      alias gc='git commit -S -m'
+      alias ll='eza --icons --long --git'
+      
+      # Tool Initialization
+      eval "$(zoxide init bash)"
+  tags: [config, shell]
+
+- name: "STEP 3: DEFENSE - Configure Firewall (Deny All Inbound)"
+  ansible.posix.firewalld:
+    zone: public
+    state: enabled
+    permanent: yes
+    target: DROP
+  notify: Restart Firewalld
+  tags: [security, firewall]
+
+- name: "STEP 4: IDENTITY - Enforce GPG Signing (Non-Repudiation)"
+  community.general.git_config:
+    name: commit.gpgsign
+    scope: global
+    value: "true"
+  tags: [security, identity]
+
+# --- PHASE 7 INTEGRATION STARTS HERE ---
+
+- name: "STEP 5: THUNDERDOME - Deploy Network Definition XML"
+  ansible.builtin.template:
+    src: thunderdome.xml.j2
+    dest: /tmp/thunderdome.xml
+    mode: '0644'
+  tags: [network, thunderdome]
+
+- name: "STEP 5.1: THUNDERDOME - Define Network Structure"
+  community.libvirt.virt_net:
+    name: thunderdome-bridge
+    state: present
+    xml: '{{ lookup("file", "/tmp/thunderdome.xml") }}'
+  tags: [network, thunderdome]
+
+- name: "STEP 5.2: THUNDERDOME - Ignite and Autostart"
+  community.libvirt.virt_net:
+    name: thunderdome-bridge
+    state: active
+    autostart: yes
+  tags: [network, thunderdome]
+
+- name: "STEP 6: AIRLOCK - Block Thunderdome from Family LAN"
+  ansible.posix.firewalld:
+    rich_rule: 'rule family="ipv4" source address="172.16.99.0/24" destination address="192.168.1.0/24" drop'
+    zone: libvirt
+    permanent: yes
+    state: enabled
+  notify: Restart Firewalld
+  tags: [security, isolation]

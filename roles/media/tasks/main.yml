@@ -1,0 +1,27 @@
+---
+- name: Ensure Media Directory Structure Exists
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+  loop:
+    - "{{ media_base_path }}"
+    - "{{ media_base_path }}/config"
+    - "{{ media_base_path }}/data"
+    - "{{ media_base_path }}/data/downloads"
+    - "{{ media_base_path }}/data/tv"
+    - "{{ media_base_path }}/data/movies"
+
+- name: Deploy Docker Compose Template
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ media_base_path }}/docker-compose.yml"
+    mode: '0644'
+  notify: Restart Media Stack
+
+- name: Ensure Media Stack is Running
+  community.docker.docker_compose_v2:
+    project_src: "{{ media_base_path }}"
+    state: present

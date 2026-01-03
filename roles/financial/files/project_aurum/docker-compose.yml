@@ -1,0 +1,30 @@
+services:
+  # 1. The Dashboard & Logic
+  aurum:
+    build: .
+    container_name: project_aurum
+    ports:
+      - "8050:8050"
+    restart: always
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=aurum_db
+      - DB_USER=titan
+      - DB_PASS=titan_secure_password
+    depends_on:
+      - postgres
+
+  # 2. The Memory Bank (Database)
+  postgres:
+    image: postgres:15-alpine
+    container_name: aurum_db
+    restart: always
+    environment:
+      - POSTGRES_DB=aurum_db
+      - POSTGRES_USER=titan
+      - POSTGRES_PASSWORD=titan_secure_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

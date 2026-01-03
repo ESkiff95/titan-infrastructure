@@ -1,0 +1,38 @@
+---
+- name: Install Suricata and Network Tools
+  ansible.builtin.apt:
+    name:
+      - suricata
+      - ethtool
+      - jq
+    state: present
+    update_cache: yes
+
+- name: Disable NIC Offloading (Fixes Checksum Drops)
+  ansible.builtin.command: ethtool -K ens3 rx off tx off
+  changed_when: false
+  # Note: In production, this should be added to /etc/network/interfaces for persistence
+
+- name: Deploy Local Canary Rules
+  ansible.builtin.copy:
+    src: local.rules
+    dest: /var/lib/suricata/rules/local.rules
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Suricata
+
+- name: Deploy Suricata Configuration
+  ansible.builtin.template:
+    src: suricata.yaml.j2
+    dest: /etc/suricata/suricata.yaml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Suricata
+
+- name: Ensure Suricata Service is Running
+  ansible.builtin.service:
+    name: suricata
+    state: started
+    enabled: yes

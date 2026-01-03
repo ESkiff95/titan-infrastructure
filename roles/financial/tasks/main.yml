@@ -1,0 +1,6 @@
+---
+- name: Deploy Project Aurum
+  copy:
+    src: project_aurum/
+    dest: /opt/project_aurum/
+    mode: '0755'

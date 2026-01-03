@@ -1,0 +1,57 @@
+---
+- name: OPERATION BLACKBOX - Precision Extraction
+  hosts: titan_nodes
+  gather_facts: yes
+  vars:
+    # Base backup location on your Fedora machine
+    backup_root: "./backups/{{ inventory_hostname }}/{{ ansible_date_time.date }}"
+
+  tasks:
+    # --- HOST: TITAN-1 (The Brain) ---
+    - name: Extract TITAN-1 Stack
+      when: inventory_hostname == '192.168.1.240'
+      block:
+        - name: Fetch Docker Compose
+          fetch:
+            src: "/opt/titan-stack/docker-compose.yml"
+            dest: "{{ backup_root }}/titan-stack/"
+            flat: yes
+
+        - name: Fetch Env Secrets
+          fetch:
+            src: "/opt/titan-stack/.env"
+            dest: "{{ backup_root }}/titan-stack/"
+            flat: yes
+          ignore_errors: yes
+
+    # --- HOST: SENTRY (The Mac) ---
+    - name: Extract SENTRY Stacks
+      when: inventory_hostname == '192.168.1.84'
+      block:
+        # Sentry Target 1: Frigate
+        - name: Fetch Frigate Compose
+          fetch:
+            src: "/home/titan/frigate/docker-compose.yml"
+            dest: "{{ backup_root }}/frigate/"
+            flat: yes
+
+        - name: Fetch Frigate Env
+          fetch:
+            src: "/home/titan/frigate/.env"
+            dest: "{{ backup_root }}/frigate/"
+            flat: yes
+          ignore_errors: yes
+
+        # Sentry Target 2: Infrastructure (Vault)
+        - name: Fetch Infrastructure Compose
+          fetch:
+            src: "/home/titan/vault/infrastructure/docker-compose.yml"
+            dest: "{{ backup_root }}/infrastructure/"
+            flat: yes
+
+        - name: Fetch Infrastructure Env
+          fetch:
+            src: "/home/titan/vault/infrastructure/.env"
+            dest: "{{ backup_root }}/infrastructure/"
+            flat: yes
+          ignore_errors: yes

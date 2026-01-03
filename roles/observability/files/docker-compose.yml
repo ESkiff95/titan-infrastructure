@@ -1,0 +1,53 @@
+version: "3.8"
+
+networks:
+  titan_proxy_net:
+    external: true
+
+services:
+
+  # 1. Prometheus Server
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - /opt/titan-stack/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - /opt/titan-stack/observability/prometheus/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.html=/usr/share/prometheus/console_templates'
+    networks:
+      - titan_proxy_net
+    depends_on:
+      - node_exporter
+
+  # 2. Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=titan_grafana
+    volumes:
+      - /opt/titan-stack/observability/grafana:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - titan_proxy_net
+
+  # 3. Node Exporter (Host Metrics)
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    restart: unless-stopped
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - titan_proxy_net

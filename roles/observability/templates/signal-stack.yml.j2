@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # THE NOTIFIER: High-speed SQLite messaging
+  gotify:
+    image: gotify/server
+    container_name: gotify
+    restart: unless-stopped
+    environment:
+      - TZ={{ timezone | default('America/Chicago') }}
+    volumes:
+      - {{ project_root }}/observability/data/gotify:/app/data
+    networks:
+      - vault_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gotify.rule=Host(`notify.vault.local`)"
+      - "traefik.http.routers.gotify.entrypoints=web"
+      - "traefik.http.routers.gotify.middlewares=prom-auth@docker"
+      - "traefik.http.services.gotify.loadbalancer.server.port=80"
+
+  # THE WATCHMAN: Real-time service health monitoring
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - {{ project_root }}/observability/data/uptime-kuma:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Allowed for local container monitoring
+    networks:
+      - vault_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime.rule=Host(`status.vault.local`)"
+      - "traefik.http.routers.uptime.entrypoints=web"
+      - "traefik.http.routers.uptime.middlewares=prom-auth@docker"
+      - "traefik.http.services.uptime.loadbalancer.server.port=3001"
+
+networks:
+  vault_net:
+    external: true

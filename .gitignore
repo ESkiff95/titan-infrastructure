@@ -1,0 +1,13 @@
+# --- SECRETS & DATA (NEVER COMMIT) ---
+backups/
+inventory/hosts.ini
+.env
+*.key
+*.pem
+id_ed25519
+id_ed25519.pub
+
+# --- SYSTEM NOISE ---
+.DS_Store
+*.retry
+*.log

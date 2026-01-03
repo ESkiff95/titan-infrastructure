@@ -1,0 +1,32 @@
+---
+- name: Update apt cache and upgrade packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Ensure OS hostname matches inventory alias
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Install essential packages
+  apt:
+    name:
+      - curl
+      - git
+      - htop
+      - vim
+      - net-tools
+    state: present
+
+- name: Remove conflicting web servers
+  apt:
+    name:
+      - apache2
+      - nginx
+    state: absent
+    purge: yes
+
+- name: Ensure Port 80 is free
+  shell: "fuser -k 80/tcp || true"
+  ignore_errors: yes

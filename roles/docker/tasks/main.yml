@@ -1,0 +1,45 @@
+---
+- name: Install required dependencies
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - software-properties-common
+      - python3-pip
+      - python3-docker  # Required for Ansible Docker modules
+    state: present
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker Repository
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+    state: present
+
+- name: Install Docker Engine
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+
+- name: Ensure Docker is running
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create Shared Media Network
+  community.docker.docker_network:
+    name: media_net
+    driver: bridge
+
+- name: Create the tribe_net for utility services (Minecraft/Media)
+  community.docker.docker_network:
+    name: tribe_net
+    driver: bridge
+    state: present

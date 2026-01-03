@@ -1,0 +1,18 @@
+---
+- name: "PROTOCOL SAFETY CHECK: Verify Target Acquisition"
+  ansible.builtin.fail:
+    msg: "DEPLOYMENT HALT: 'predator_ip' variable is missing. Target undefined."
+  when: predator_ip is not defined or predator_ip == ''
+
+- name: "PHASE IV: Engage Threat (UFW Deny)"
+  community.general.ufw:
+    rule: deny
+    src: "{{ predator_ip }}"
+    comment: "Blocked via Predator Protocol on {{ ansible_date_time.iso8601 }}"
+
+- name: "PHASE IV: Archive Engagement (Local Log)"
+  ansible.builtin.lineinfile:
+    path: /var/log/predator_defense.log
+    line: "{{ ansible_date_time.iso8601 }} - TARGET ELIMINATED - IP: {{ predator_ip }}"
+    create: yes
+    mode: '0640'

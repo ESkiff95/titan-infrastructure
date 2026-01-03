@@ -1,0 +1,84 @@
+---
+- name: Create Configuration Directory
+  file:
+    path: "{{ deploy_root }}/observability/config"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Create Data Directories
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: '0755'
+  loop:
+    - { path: "{{ deploy_root }}/observability/prometheus_data", owner: "65534", group: "65534" }
+    - { path: "{{ deploy_root }}/observability/grafana_data", owner: "472", group: "472" }
+    - { path: "{{ deploy_root }}/observability/data/gotify", owner: "{{ ansible_user }}", group: "{{ ansible_user }}" }
+    - { path: "{{ deploy_root }}/observability/data/uptime-kuma", owner: "{{ ansible_user }}", group: "{{ ansible_user }}" }
+
+# --- CONFIGURATION TASKS (MUST RUN FIRST) ---
+
+- name: Deploy Alertmanager Config
+  template:
+    src: alertmanager.yml.j2
+    dest: "{{ deploy_root }}/observability/config/alertmanager.yml"
+    owner: "65534"
+    group: "65534"
+    mode: '0644'
+
+- name: Deploy Discord Template
+  template:
+    src: discord.tmpl.j2
+    dest: "{{ deploy_root }}/observability/config/discord.tmpl"
+    owner: "65534"
+    group: "65534"
+    mode: '0644'
+
+- name: Deploy Prometheus Config
+  template:
+    src: prometheus.yml.j2
+    dest: "{{ deploy_root }}/observability/config/prometheus.yml"
+    owner: "65534"
+    group: "65534"
+    mode: '0644'
+  notify: Restart Monitoring Stack
+
+# --- DEPLOYMENT TASKS (MUST RUN LAST) ---
+
+- name: Deploy Monitoring Docker Compose
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ deploy_root }}/observability/docker-compose.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+  notify: Restart Monitoring Stack
+
+- name: Ensure Monitoring Stack is Running
+  community.docker.docker_compose_v2:
+    project_src: "{{ deploy_root }}/observability"
+    state: present
+    pull: always
+    remove_orphans: yes
+
+# --- SIGNAL STACK (GOTIFY + UPTIME KUMA) ---
+
+- name: Deploy Signal Stack Compose Definition
+  template:
+    src: signal-stack.yml.j2
+    dest: "{{ deploy_root }}/observability/signal-stack.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Ensure Signal Stack is Running
+  community.docker.docker_compose_v2:
+    project_src: "{{ deploy_root }}/observability"
+    files:
+      - signal-stack.yml
+    state: present
+    pull: always

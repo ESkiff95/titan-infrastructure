@@ -1,0 +1,7 @@
+---
+# Security Constraints for Network Core
+# Target State: MGMT VLAN (10.0.10.0/24)
+# Current State: LAN (192.168.1.0/24) - REQUIRED TO PREVENT LOCKOUT
+
+admin_access_range: "10.0.10.0/24"
+legacy_admin_access: "192.168.1.0/24"

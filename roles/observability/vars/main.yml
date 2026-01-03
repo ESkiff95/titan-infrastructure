@@ -1,0 +1,4 @@
+---
+deploy_root: /opt/titan-stack
+ansible_user: titanadmin
+traefik_auth: "user:157551apr1157551kUXEZ8lc157551n/VNlx0r6XfPvmZei/rdU/"

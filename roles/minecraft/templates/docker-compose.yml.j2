@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  minecraft:
+    image: itzg/minecraft-bedrock-server:latest
+    container_name: minecraft_bedrock
+    restart: always
+    ports:
+      - "19132:19132/udp" # Direct UDP port exposure
+    environment:
+      EULA: "TRUE"
+      SERVER_NAME: "The Daughter's World"
+      GAMEMODE: "survival"
+      DIFFICULTY: "normal"
+      MAX_PLAYERS: 5
+    volumes:
+      - /opt/titan-stack/minecraft/data:/data # Persistent World Data
+    networks:
+      - tribe_net # Isolate from monitoring and attack networks
+    deploy:
+      resources:
+        limits:
+          memory: 1g # Hard Cap: Do NOT repeat the Wazuh mistake
+          cpus: "0.5" # Limit to half a CPU core
+    # The dedicated user is handled by the image, not manual useradd.
+networks:
+  tribe_net:
+    external: true

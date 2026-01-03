@@ -1,0 +1,64 @@
+---
+- name: OPERATION IRONCLAD - Install & Configure Shields
+  hosts: titan_nodes
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+  tasks:
+    # --- PHASE 1: INSTALLATION ---
+    - name: Update Apt Cache (Debian/Ubuntu)
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      ignore_errors: yes
+
+    - name: Ensure UFW is Installed
+      package:
+        name: ufw
+        state: present
+
+    # --- PHASE 2: BASE RULES (DO NOT LOCK YOURSELF OUT) ---
+    - name: Set Default Policies (Deny Incoming, Allow Outgoing)
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+        state: enabled
+      loop:
+        - { direction: incoming, policy: deny }
+        - { direction: outgoing, policy: allow }
+
+    - name: Always Allow SSH (Port 22) - CRITICAL
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    # --- PHASE 3: TITAN-1 SPECIFIC RULES ---
+    - name: Permit Titan Services
+      when: inventory_hostname == '192.168.1.240'
+      block:
+        - name: Allow Paperless (8000)
+          ufw:
+            rule: allow
+            port: '8000'
+            proto: tcp
+
+    # --- PHASE 4: SENTRY SPECIFIC RULES ---
+    - name: Permit Sentry Services
+      when: inventory_hostname == '192.168.1.84'
+      block:
+        - name: Allow Frigate Web (5000)
+          ufw:
+            rule: allow
+            port: '5000'
+            proto: tcp
+        - name: Allow Frigate RTSP (8554)
+          ufw:
+            rule: allow
+            port: '8554'
+            proto: tcp
+
+    # --- PHASE 5: ENABLE SHIELDS ---
+    - name: Enable UFW
+      ufw:
+        state: enabled

@@ -1,0 +1,13 @@
+{{ define "discord.title" }}
+[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+{{ end }}
+
+{{ define "discord.message" }}
+{{ range .Alerts }}
+**Severity:** {{ .Labels.severity }}
+**Description:** {{ .Annotations.description }}
+**Summary:** {{ .Annotations.summary }}
+**Active Since:** {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+--------------------------------
+{{ end }}
+{{ end }}

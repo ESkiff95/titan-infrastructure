@@ -1,0 +1,31 @@
+---
+- name: Ensure Proxy Directory Structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+  loop:
+    - "{{ deploy_root }}/proxy"
+    - "{{ deploy_root }}/proxy/config"
+
+- name: Deploy Traefik Config
+  template:
+    src: traefik.yml.j2
+    dest: "{{ deploy_root }}/proxy/config/traefik.yml"
+    mode: '0644'
+  notify: Restart Proxy
+
+- name: Deploy Proxy Compose File
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ deploy_root }}/proxy/docker-compose.yml"
+    mode: '0644'
+  notify: Restart Proxy
+
+- name: Ensure Proxy Stack is Running
+  community.docker.docker_compose_v2:
+    project_src: "{{ deploy_root }}/proxy"
+    state: present
+    pull: always

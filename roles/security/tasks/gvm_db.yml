@@ -1,0 +1,27 @@
+---
+- name: Deploy GVM Postgres Database
+  community.docker.docker_container:
+    name: gvm-postgres
+    image: postgres:15-alpine
+    restart_policy: unless-stopped
+    # OPTIMIZATION: Critical for GVM Performance
+    shm_size: '1g'
+    volumes:
+      # FIX: Added quotes around the variable path
+      - "{{ deploy_root }}/security/gvm_data:/var/lib/postgresql/data"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    env:
+      POSTGRES_USER: "{{ gvm_db_user }}"
+      POSTGRES_PASSWORD: "{{ gvm_db_password }}"
+      POSTGRES_DB: "{{ gvm_db_name }}"
+    networks:
+      - name: vault_net
+    # OPTIMIZATION: JIT Disabled for CPU Efficiency
+    command: 
+      - "postgres"
+      - "-c"
+      - "jit=off"
+    labels:
+      traefik.enable: "false"
+  # TAGS: Filter for Surgical Deployment
+  tags: ['gvm_db', 'security']
