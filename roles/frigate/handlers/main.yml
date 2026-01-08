@@ -1,5 +1,5 @@
----
 - name: Restart Frigate
-  docker_container:
-    name: frigate
-    state: restarted
+  community.docker.docker_container:
+    name: titan_sentry
+    state: started
+    restart: true
