@@ -5,7 +5,7 @@
 # Mission: Hardening, Connectivity, Engine
 # ==========================================
 - name: GLOBAL SYSTEM BASELINE
-  hosts: titan_nodes
+  hosts: core:watchdogs
   become: yes
   gather_facts: yes
   tags: ['base']
@@ -29,7 +29,7 @@
 # Mission: Heavy Compute, Storage, Analysis
 # ==========================================
 - name: TITAN CORE OPERATIONS
-  hosts: titan
+  hosts: core
   become: yes
   gather_facts: yes
   tags: ['core']
@@ -57,7 +57,7 @@
 # Mission: Computer Vision & NVR
 # ==========================================
 - name: SENTRY EDGE OPERATIONS
-  hosts: sentry
+  hosts: watchdogs
   become: yes
   gather_facts: yes
   tags: ['sentry']
