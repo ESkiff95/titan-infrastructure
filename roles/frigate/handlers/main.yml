@@ -1,5 +1,2 @@
 - name: Restart Frigate
-  community.docker.docker_container:
-    name: titan_sentry
-    state: started
-    restart: true
+  ansible.builtin.command: docker restart titan_sentry
