@@ -26,6 +26,7 @@
     - '80'
     - '443'
     - '8080'
+
 - name: Allow DNS Traffic (Port 53) for Pi-hole
   ufw:
     rule: allow
@@ -39,3 +40,14 @@
     proto: udp
     state: enabled
 - import_tasks: gvm_db.yml
+
+- name: Allow Web Traffic (Traefik/AdGuard Setup)
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - 80
+    - 443
+    - 8080
+    - 3000  # <--- ADD THIS LINE

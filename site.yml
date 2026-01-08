@@ -38,6 +38,9 @@
     - role: security  # GVM & Recon (Moved here to protect Sentry)
       tags: ['security', 'gvm']
 
+    # ADD THIS BLOCK:
+    - role: adguard
+      tags: ['dns', 'network']
     # Uncomment as you verify they are ready
     # - role: observability
     #   tags: ['monitor']

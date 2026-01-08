@@ -1,0 +1,23 @@
+---
+- name: Create AdGuard Directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: docker
+  loop:
+    - /opt/adguard
+    - /opt/adguard/work
+    - /opt/adguard/conf
+
+- name: Deploy AdGuard Container
+  docker_container:
+    name: adguard
+    image: adguard/adguardhome:latest
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host  # REQUIRED for DHCP to work
+    volumes:
+      - /opt/adguard/work:/opt/adguardhome/work
+      - /opt/adguard/conf:/opt/adguardhome/conf
