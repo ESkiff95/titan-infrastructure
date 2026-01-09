@@ -18,7 +18,7 @@ cameras:
         default: 3
     ffmpeg:
       inputs:
-        - path: rtsp://{{ camera_user }}:{{ camera_password }}@192.168.1.248:8554/unicast
+        - path: rtsp://{{ camera_user }}:{{ camera_password }}@{{ host_ip_camera_front }}:8554/unicast
           roles:
             - detect
             - record

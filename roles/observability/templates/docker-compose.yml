@@ -23,6 +23,8 @@ services:
       # MIDDLEWARE: Security Gate
       - "traefik.http.middlewares.auth.basicauth.users=user:$$2y$$05$$K2m16C6q92Xmawg25UcgxuG9blKHGk954kl5sOpVaoNDReCj5nhXm"
       - "traefik.http.routers.grafana.middlewares=auth"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   prometheus:
     image: prom/prometheus:latest
@@ -39,6 +41,8 @@ services:
       - "traefik.http.routers.prometheus.tls=true"
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
       - "traefik.http.routers.prometheus.middlewares=auth"
+      - "traefik.http.routers.prometheus.tls=true"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
 
 volumes:
   grafana_data:

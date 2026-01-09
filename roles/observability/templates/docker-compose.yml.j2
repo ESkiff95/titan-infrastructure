@@ -1,71 +1,79 @@
-version: '3.8'
-
-networks:
-  vault_net:
-    external: true
+version: "3.8"
 
 services:
+  # ==========================================
+  # CORE OBSERVABILITY (The "Eyes")
+  # ==========================================
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
     restart: unless-stopped
-    user: "65534:65534"
     volumes:
-      - {{ deploy_root }}/observability/config/prometheus.yml:/etc/prometheus/prometheus.yml
-      # NEW: Mount the Alert Rules
-      - {{ deploy_root }}/observability/config/alerts.yml:/etc/prometheus/alerts.yml
-      - prometheus_data:/prometheus
+      # FIXED: Use global docker_dir
+      - {{ docker_dir }}/observability/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - {{ docker_dir }}/observability/prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
-      - '--web.external-url=http://prometheus.vault.local'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
     networks:
       - vault_net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.prometheus.rule=Host(`prometheus.vault.local`)"
-      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.routers.prometheus.entrypoints=websecure"
+      - "traefik.http.routers.prometheus.tls=true"
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-      - "traefik.http.middlewares.prom-auth.basicauth.users={{ traefik_auth }}"
-      - "traefik.http.routers.prometheus.middlewares=prom-auth"
 
-  # NEW SERVICE: THE DISPATCHER
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      # FIXED: Use global docker_dir
+      - {{ docker_dir }}/observability/grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}
+    networks:
+      - vault_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.vault.local`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
   alertmanager:
     image: prom/alertmanager:latest
     container_name: alertmanager
     restart: unless-stopped
     volumes:
-      - {{ deploy_root }}/observability/config/alertmanager.yml:/etc/alertmanager/alertmanager.yml
-      - {{ deploy_root }}/observability/config/discord.tmpl:/etc/alertmanager/templates/discord.tmpl
+      # FIXED: Use global docker_dir
+      - {{ docker_dir }}/observability/config/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - {{ docker_dir }}/observability/config/discord_template.yml:/etc/alertmanager/discord_template.yml
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
     networks:
       - vault_net
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.alertmanager.rule=Host(`alertmanager.vault.local`)"
-      - "traefik.http.routers.alertmanager.entrypoints=web"
-      - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
-      - "traefik.http.middlewares.prom-auth.basicauth.users={{ traefik_auth }}"
-      - "traefik.http.routers.alertmanager.middlewares=prom-auth"
 
+  # ==========================================
+  # AGENTS & EXPORTERS (The "Sensors")
+  # ==========================================
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
     restart: unless-stopped
+    hostname: titan-core-01
     volumes:
+      # NOTE: These are System Mounts, keep as is
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
       - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)(157551|/)'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     networks:
       - vault_net
 
@@ -73,10 +81,8 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     restart: unless-stopped
-    privileged: true
-    devices:
-      - /dev/kmsg:/dev/kmsg
     volumes:
+      # NOTE: These are System Mounts, keep as is
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
@@ -85,25 +91,47 @@ services:
     networks:
       - vault_net
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
+  # ==========================================
+  # SIGNAL STACK (The "Alarms")
+  # ==========================================
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
     restart: unless-stopped
-    user: "472:472"
     volumes:
-      - grafana_data:/var/lib/grafana
+      # FIXED: Use global docker_dir (This prevents the wipe issue)
+      - {{ docker_dir }}/observability/data/uptime-kuma:/app/data
     networks:
       - vault_net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(`grafana.vault.local`)"
-      - "traefik.http.routers.grafana.entrypoints=web"
-      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.grafana-auth.basicauth.users={{ traefik_auth }}"
-      - "traefik.http.routers.grafana.middlewares=grafana-auth"
+      - "traefik.http.routers.kuma.rule=Host(`status.vault.local`)"
+      - "traefik.http.routers.kuma.entrypoints=websecure"
+      - "traefik.http.routers.kuma.tls=true"
+      - "traefik.http.services.kuma.loadbalancer.server.port=3001"
 
-volumes:
-  prometheus_data:
-    driver: local
-  grafana_data:
-    driver: local
+  gotify:
+    image: gotify/server
+    container_name: gotify
+    restart: unless-stopped
+    volumes:
+      # FIXED: Use global docker_dir
+      - {{ docker_dir }}/observability/data/gotify:/app/data
+    environment:
+      - GOTIFY_DEFAULTUSER_PASS={{ gotify_admin_password }}
+    networks:
+      - vault_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gotify.rule=Host(`gotify.vault.local`)"
+      - "traefik.http.routers.gotify.entrypoints=websecure"
+      - "traefik.http.routers.gotify.tls=true"
+      - "traefik.http.services.gotify.loadbalancer.server.port=80"
+
+# ==========================================
+# NETWORKS
+# ==========================================
+networks:
+  vault_net:
+    name: vault_net
+    external: true

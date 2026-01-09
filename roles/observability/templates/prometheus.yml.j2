@@ -2,11 +2,9 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
-# RULE 1: Load the Hardware Alerts
 rule_files:
   - "/etc/prometheus/alerts.yml"
 
-# RULE 2: Send to Alertmanager
 alerting:
   alertmanagers:
     - static_configs:
@@ -14,14 +12,40 @@ alerting:
             - alertmanager:9093
 
 scrape_configs:
+  # --- SELF MONITORING ---
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
+  # --- UNIFIED NODE EXPORTER (The Fix) ---
   - job_name: 'node-exporter'
     static_configs:
+      # 1. TITAN CORE (Local)
       - targets: ['node-exporter:9100']
+        labels:
+          instance: 'titan-core-01'  # Force a pretty name
 
+      # 2. SENTRY EDGE (Remote)
+      - targets: ['{{ host_ip_media_server }}:9100']
+        labels:
+          instance: 'sentry-edge'    # Force a pretty name
+
+      # 3. RESERVE NODE (Remote)
+      - targets: ['{{ host_ip_backup_node }}:9100']
+        labels:
+          instance: 'reserve-node'   # Force a pretty name
+
+  # --- CADVISOR (Container Metrics) ---
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['cadvisor:8080']
+        labels:
+          instance: 'titan-core-01'
+
+      - targets: ['{{ host_ip_media_server }}:8080']
+        labels:
+          instance: 'sentry-edge'
+
+      - targets: ['{{ host_ip_backup_node }}:8080']
+        labels:
+          instance: 'reserve-node'

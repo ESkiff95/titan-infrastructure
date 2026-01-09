@@ -1,0 +1,8 @@
+# group_vars/all/main.yml
+lan_subnet: "192.168.1.0/24"
+thunderdome_subnet: "172.16.99.0/24"
+
+# Host IP Mapping
+host_ip_media_server: "192.168.1.84"
+host_ip_backup_node: "192.168.1.251"
+host_ip_camera_front: "192.168.1.248"

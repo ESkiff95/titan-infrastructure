@@ -1,0 +1,6 @@
+---
+# Default deployment root
+deploy_root: /opt/titan-stack
+
+# Define the specific root for this role
+observability_root: "{{ deploy_root }}/observability"
