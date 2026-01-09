@@ -1,0 +1,9 @@
+---
+# LOGIC:
+# Titan Core (Group: titan) runs the master Observability stack.
+# All other nodes (Sentry, Reserve) need the agents.
+
+- include_tasks: monitoring_agent.yml
+  when: "'titan' not in group_names"
+
+- include_tasks: power_management.yml

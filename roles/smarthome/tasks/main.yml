@@ -1,0 +1,45 @@
+---
+- import_tasks: firewall.yml
+
+- name: Create Smart Home Directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+  loop:
+    - /opt/mqtt
+    - /opt/mqtt/config
+    - /opt/mqtt/data
+    - /opt/mqtt/log
+    - /opt/homeassistant
+    - /opt/homeassistant/config
+
+- name: Deploy MQTT Broker
+  community.docker.docker_container:
+    name: mqtt_broker
+    image: eclipse-mosquitto:latest
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - /opt/mqtt/config:/mosquitto/config
+      - /opt/mqtt/data:/mosquitto/data
+      - /opt/mqtt/log:/mosquitto/log
+    networks:
+      - name: vault_net
+
+- name: Deploy Home Assistant
+  community.docker.docker_container:
+    name: homeassistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    state: started
+    restart_policy: unless-stopped
+    privileged: yes
+    network_mode: host
+    volumes:
+      - /opt/homeassistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro

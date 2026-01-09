@@ -1,0 +1,34 @@
+---
+- name: Start Node Exporter (System Metrics)
+  community.docker.docker_container:
+    name: node-exporter
+    image: prom/node-exporter:latest
+    restart_policy: unless-stopped
+    hostname: "{{ ansible_hostname | default(inventory_hostname) }}"
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - name: bridge  # Agents can sit on the default bridge; Prometheus reaches them via IP
+
+- name: Start cAdvisor (Container Metrics)
+  community.docker.docker_container:
+    name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    restart_policy: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: yes
