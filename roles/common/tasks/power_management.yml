@@ -24,6 +24,12 @@
     - hibernate.target
     - hybrid-sleep.target
 
+- name: Check if nmcli exists
+  command: which nmcli
+  register: nmcli_check
+  ignore_errors: true
+  changed_when: false
+
 # roles/common/tasks/power_management.yml
 - name: Disable WiFi Power Management (Modern)
   shell: "nmcli device set $(ip -o -4 route show to default | awk '{print $5}') managed yes && nmcli connection modify $(ip -o -4 route show to default | awk '{print $5}') 802-11-wireless.powersave 2"
