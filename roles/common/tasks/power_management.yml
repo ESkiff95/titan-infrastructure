@@ -1,0 +1,31 @@
+---
+- name: Configure System to Ignore Lid Close (Laptop Server Mode)
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/logind.conf
+    regexp: '^{{ item.key }}='
+    line: '{{ item.key }}={{ item.value }}'
+    state: present
+  with_items:
+    - { key: 'HandleLidSwitch', value: 'ignore' }
+    - { key: 'HandleLidSwitchExternalPower', value: 'ignore' }
+    - { key: 'HandleLidSwitchDocked', value: 'ignore' }
+    - { key: 'IdleAction', value: 'ignore' }
+  notify: Restart Logind
+
+- name: Mask Sleep and Suspend Targets (Hard Disable)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    masked: yes
+    enabled: no
+    state: stopped
+  with_items:
+    - sleep.target
+    - suspend.target
+    - hibernate.target
+    - hybrid-sleep.target
+
+# roles/common/tasks/power_management.yml
+- name: Disable WiFi Power Management (Modern)
+  shell: "nmcli device set $(ip -o -4 route show to default | awk '{print $5}') managed yes && nmcli connection modify $(ip -o -4 route show to default | awk '{print $5}') 802-11-wireless.powersave 2"
+  ignore_errors: true
+  become: true

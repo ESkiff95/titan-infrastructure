@@ -2,27 +2,33 @@
 - name: Install required dependencies
   apt:
     name:
-      - apt-transport-https
       - ca-certificates
-      - software-properties-common
-      - python3-pip
-      - python3-docker  # Required for Ansible Docker modules
+      - curl
+      - gnupg
+      - python3-docker
     state: present
 
-- name: Add Docker GPG key
-  apt_key:
+- name: Create directory for Docker GPG key
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add Docker GPG key (Modern Method)
+  get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
 
-- name: Add Docker Repository
+- name: Add Docker Repository (Modern Method)
   apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
     state: present
+    filename: docker-stable
 
-- name: Update Apt Cache (Force)
+- name: Update Apt Cache
   apt:
     update_cache: yes
-  when: ansible_os_family == 'Debian'
 
 - name: Install Docker Engine
   package:
@@ -30,18 +36,10 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
-      - docker-buildx-plugin
       - docker-compose-plugin
     state: present
-  ignore_errors: yes  # Failsafe for Sentry (Mac hardware quirks)
   register: docker_install_result
-
-# Fallback for Edge Nodes (like Sentry) if docker-ce isn't found
-- name: Install Docker.io (Fallback)
-  package:
-    name: docker.io
-    state: present
-  when: docker_install_result.failed
+  ignore_errors: yes
 
 - name: Ensure Docker is running
   service:
@@ -49,19 +47,12 @@
     state: started
     enabled: yes
 
-- name: Create Shared Media Network
+- name: Create Docker Networks
   community.docker.docker_network:
-    name: media_net
-    driver: bridge
-
-- name: Create the tribe_net for utility services (Minecraft/Media)
-  community.docker.docker_network:
-    name: tribe_net
+    name: "{{ item }}"
     driver: bridge
     state: present
-
-- name: Create Secure Vault Network
-  docker_network:
-    name: vault_net
-    driver: bridge
-    state: present
+  loop:
+    - media_net
+    - tribe_net
+    - vault_net
