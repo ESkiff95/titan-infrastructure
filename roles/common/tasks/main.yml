@@ -2,6 +2,14 @@
 # LOGIC:
 # Titan Core (Group: titan) runs the master Observability stack.
 # All other nodes (Sentry, Reserve) need the agents.
+- name: Ensure System Dependencies are Installed
+  apt:
+    name:
+      - cron
+      - network-manager
+      - wireless-tools
+    state: present
+    update_cache: yes
 
 - include_tasks: monitoring_agent.yml
   when: "'titan' not in group_names"

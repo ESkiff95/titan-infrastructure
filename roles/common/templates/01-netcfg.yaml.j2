@@ -1,0 +1,16 @@
+network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    # The USB/Internal Ethernet Adapter
+    enxaedfa166a553:
+      dhcp4: true
+      optional: true
+  wifis:
+    # The Broadcom WiFi Interface
+    wlp3s0:
+      dhcp4: true
+      optional: true
+      access-points:
+        "{{ wifi_ssid }}":
+          password: "{{ wifi_password }}"

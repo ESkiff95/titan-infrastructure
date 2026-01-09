@@ -35,3 +35,48 @@
   shell: "nmcli device set $(ip -o -4 route show to default | awk '{print $5}') managed yes && nmcli connection modify $(ip -o -4 route show to default | awk '{print $5}') 802-11-wireless.powersave 2"
   ignore_errors: true
   become: true
+
+- name: Create Network Sentinel (Keep-Alive Script)
+  copy:
+    dest: /usr/local/bin/network-sentinel.sh
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      # Ping the Gateway (Router)
+      TARGET="192.168.1.1"
+      
+      # If Ping fails (silently)
+      if ! ping -c 1 $TARGET > /dev/null 2>&1; then
+        echo "$(date): Network down. Attempting recovery..." >> /var/log/network-sentinel.log
+        
+        # 1. Force Netplan Apply
+        /usr/sbin/netplan apply
+        
+        # 2. Hard Reset WiFi (Specific to Mac/Broadcom drivers)
+        nmcli radio wifi off && sleep 2 && nmcli radio wifi on
+      fi
+
+- name: Deploy Unified Netplan Configuration
+  template:
+    src: 01-netcfg.yaml.j2
+    dest: /etc/netplan/01-netcfg.yaml
+    mode: '0600'
+  # Only run this on the Mac to avoid breaking other nodes
+  when: ansible_hostname == "titanmac" 
+
+- name: Remove Conflicting NetworkManager Configs
+  file:
+    path: /etc/netplan/90-NM-877efce2-4f09-4687-bfb4-0132d0606103.yaml
+    state: absent
+  when: ansible_hostname == "titanmac"
+
+- name: Apply Netplan Changes
+  command: netplan apply
+  when: ansible_hostname == "titanmac"
+  ignore_errors: true # In case the network flickers
+
+- name: Schedule Network Sentinel (Every 5 Minutes)
+  cron:
+    name: "keep-alive-network"
+    minute: "*/5"
+    job: "/usr/local/bin/network-sentinel.sh"
