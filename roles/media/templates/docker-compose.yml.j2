@@ -1,26 +1,24 @@
-version: '3.8'
-
 services:
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
     restart: unless-stopped
     environment:
-      - PUID={{ ansible_user_uid }}
-      - PGID={{ ansible_user_gid }}
+      - PUID={{ ansible_user_uid | default('1000') }}
+      - PGID={{ ansible_user_gid | default('1000') }}
       - TZ=America/Chicago
     volumes:
-      - {{ media_base_path }}/config/sonarr:/config
+      # FIXED: Config lives in the Backup Zone
+      - {{ docker_dir }}/media/config/sonarr:/config
+      # DATA: Media lives in the Storage Zone (Not backed up daily)
       - {{ media_base_path }}/data/tv:/tv
       - {{ media_base_path }}/data/downloads:/downloads
     networks:
       - vault_net
     labels:
       - "traefik.enable=true"
-      # FIX 1: Correct Hostname
       - "traefik.http.routers.sonarr.rule=Host(`sonarr.vault.local`)"
       - "traefik.http.routers.sonarr.entrypoints=web"
-      # FIX 2: Global Auth Middleware
       - "traefik.http.routers.sonarr.middlewares=vault-auth@docker"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
 
@@ -29,11 +27,13 @@ services:
     container_name: radarr
     restart: unless-stopped
     environment:
-      - PUID={{ ansible_user_uid }}
-      - PGID={{ ansible_user_gid }}
+      - PUID={{ ansible_user_uid | default('1000') }}
+      - PGID={{ ansible_user_gid | default('1000') }}
       - TZ=America/Chicago
     volumes:
-      - {{ media_base_path }}/config/radarr:/config
+      # FIXED: Config lives in the Backup Zone
+      - {{ docker_dir }}/media/config/radarr:/config
+      # DATA: Media lives in the Storage Zone
       - {{ media_base_path }}/data/movies:/movies
       - {{ media_base_path }}/data/downloads:/downloads
     networks:
@@ -50,11 +50,13 @@ services:
     container_name: sabnzbd
     restart: unless-stopped
     environment:
-      - PUID={{ ansible_user_uid }}
-      - PGID={{ ansible_user_gid }}
+      - PUID={{ ansible_user_uid | default('1000') }}
+      - PGID={{ ansible_user_gid | default('1000') }}
       - TZ=America/Chicago
     volumes:
-      - {{ media_base_path }}/config/sabnzbd:/config
+      # FIXED: Config lives in the Backup Zone
+      - {{ docker_dir }}/media/config/sabnzbd:/config
+      # DATA: Media lives in the Storage Zone
       - {{ media_base_path }}/data/downloads:/downloads
     networks:
       - vault_net

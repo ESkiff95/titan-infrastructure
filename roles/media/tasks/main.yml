@@ -4,8 +4,8 @@
     path: "{{ item }}"
     state: directory
     mode: '0755'
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_gid }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   loop:
     - "{{ media_base_path }}"
     - "{{ media_base_path }}/config"

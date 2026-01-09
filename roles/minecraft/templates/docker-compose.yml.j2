@@ -13,7 +13,8 @@ services:
       DIFFICULTY: "normal"
       MAX_PLAYERS: 5
     volumes:
-      - /opt/titan-stack/minecraft/data:/data # Persistent World Data
+      # FIXED: Replaced hardcoded path with variable
+      - {{ docker_dir }}/minecraft/data:/data # Persistent World Data
     networks:
       - tribe_net # Isolate from monitoring and attack networks
     deploy:

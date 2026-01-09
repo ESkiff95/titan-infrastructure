@@ -5,7 +5,7 @@
 # Mission: Hardening, Connectivity, Engine
 # ==========================================
 - name: GLOBAL SYSTEM BASELINE
-  hosts: core:watchdogs
+  hosts: titan_nodes
   become: yes
   gather_facts: yes
   tags: ['base']
@@ -29,7 +29,7 @@
 # Mission: Heavy Compute, Storage, Analysis
 # ==========================================
 - name: TITAN CORE OPERATIONS
-  hosts: core
+  hosts: titan
   become: yes
   gather_facts: yes
   tags: ['core']
@@ -38,18 +38,20 @@
     - role: security  # GVM & Recon (Moved here to protect Sentry)
       tags: ['security', 'gvm']
 
-    # ADD THIS BLOCK:
     - role: adguard
       tags: ['dns', 'network']
-    # Uncomment as you verify they are ready
-    # - role: observability
-    #   tags: ['monitor']
 
-    # - role: financial
-    #   tags: ['app', 'aurum']
+    - role: observability
+      tags: ['monitor']
 
-    # - role: media
-    #   tags: ['app', 'media']
+    - role: financial
+      tags: ['app', 'aurum']
+
+    - role: media
+      tags: ['app', 'media']
+
+    - role: smarthome
+      tags: ['hass', 'mqtt']
 
 # ==========================================
 # PLAY 3: SENTRY OPERATIONS (EDGE ONLY)
@@ -57,7 +59,7 @@
 # Mission: Computer Vision & NVR
 # ==========================================
 - name: SENTRY EDGE OPERATIONS
-  hosts: watchdogs
+  hosts: sentry
   become: yes
   gather_facts: yes
   tags: ['sentry']

@@ -22,7 +22,7 @@ services:
     environment:
       - POSTGRES_DB=aurum_db
       - POSTGRES_USER=titan
-      - POSTGRES_PASSWORD=titan_secure_password
+      - POSTGRES_PASSWORD={{ project_aurum_db_password }}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

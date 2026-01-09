@@ -1,0 +1,7 @@
+---
+# THE INFRASTRUCTURE CONSTANTS
+# Never change 'docker_dir' after initial deployment without a migration plan.
+docker_dir: /opt/titan-stack
+
+# Backup Location
+backup_dir: /home/titanadmin/backups
