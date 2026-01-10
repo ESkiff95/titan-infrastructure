@@ -67,3 +67,18 @@
   roles:
     - role: frigate
       tags: ['nvr', 'vision']
+
+# ==========================================
+# PLAY 4: WORKSTATION / CONTROL NODE
+# Target: The Laptop (Localhost)
+# Mission: Developer Experience (DX) & GUI
+# ==========================================
+- name: WORKSTATION CONFIGURATION
+  hosts: workstation
+  become: no
+  gather_facts: yes
+  tags: ['workstation']
+
+  roles:
+    - role: workstation_core
+      tags: ['gui', 'shortcuts']

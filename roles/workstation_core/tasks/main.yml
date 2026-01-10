@@ -11,6 +11,7 @@
       - fzf
       - ripgrep
     state: present
+  become: true
 
 - name: Ensure 'Titan_Vault' Directory Exists
   file:
@@ -19,3 +20,6 @@
     mode: '0700'
     owner: "{{ ansible_env.USER }}"
     group: "{{ ansible_env.USER }}"
+
+- name: Configure Workstation Shortcuts
+  include_tasks: shortcuts.yml

@@ -1,0 +1,30 @@
+---
+- name: MEDIA CONTROLS - Install Playerctl (Universal Remote)
+  dnf:
+    name: playerctl
+    state: present
+  become: true
+
+- name: MEDIA CONTROLS - Register Custom Keybinding Slots (GNOME)
+  community.general.dconf:
+    key: "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
+    value: "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/']"
+    state: present
+
+- name: MEDIA CONTROLS - Slot 0 (Next Track)
+  community.general.dconf:
+    key: "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/{{ item.key }}"
+    value: "{{ item.value }}"
+  loop:
+    - { key: "name", value: "'Media - Next'" }
+    - { key: "command", value: "'playerctl next'" }
+    - { key: "binding", value: "'<Super>Forward'" }
+
+- name: MEDIA CONTROLS - Slot 1 (Play/Pause)
+  community.general.dconf:
+    key: "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/{{ item.key }}"
+    value: "{{ item.value }}"
+  loop:
+    - { key: "name", value: "'Media - Toggle'" }
+    - { key: "command", value: "'playerctl play-pause'" }
+    - { key: "binding", value: "'<Super>Back'" } 
