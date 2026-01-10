@@ -1,17 +1,32 @@
----
-# LOGIC:
-# Titan Core (Group: titan) runs the master Observability stack.
-# All other nodes (Sentry, Reserve) need the agents.
-- name: Ensure System Dependencies are Installed
-  apt:
-    name:
-      - cron
-      - network-manager
-      - wireless-tools
+# 1. PREREQUISITE: Ensure Curl Exists
+- name: ATUIN - Ensure Fetch Tools Exist
+  package:  # Uses apt or dnf automatically based on OS
+    name: curl
     state: present
-    update_cache: yes
+  become: yes
 
-- include_tasks: monitoring_agent.yml
-  when: "'titan' not in group_names"
+# 2. PURGE SNAP (Sanitation)
+- name: ATUIN - Remove Snap Version (Sandbox Cleanup)
+  snap:
+    name: atuin
+    state: absent
+  become: yes
+  ignore_errors: yes # Don't fail if snap isn't even installed
 
-- include_tasks: power_management.yml
+# 3. INSTALL BINARY (User Scope)
+- name: ATUIN - Install Native Binary
+  shell: "curl --proto '=https' --tlsv1.2 -sSf https://setup.atuin.sh | sh"
+  args:
+    # HARDENING: We explicitly construct the path using the inventory user
+    creates: "/home/{{ ansible_user }}/.atuin/bin/atuin"
+  become: no  # Runs as titanadmin/titan
+
+# 4. CONFIGURE PATH
+- name: ATUIN - Add to Path in .bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: '[[ -f ~/.atuin/bin/env ]] && source ~/.atuin/bin/env'
+    state: present
+    create: yes
+    mode: '0644'
+  become: no

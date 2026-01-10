@@ -8,9 +8,7 @@ services:
       - PGID={{ ansible_user_gid | default('1000') }}
       - TZ=America/Chicago
     volumes:
-      # FIXED: Config lives in the Backup Zone
       - {{ docker_dir }}/media/config/sonarr:/config
-      # DATA: Media lives in the Storage Zone (Not backed up daily)
       - {{ media_base_path }}/data/tv:/tv
       - {{ media_base_path }}/data/downloads:/downloads
     networks:
@@ -31,9 +29,7 @@ services:
       - PGID={{ ansible_user_gid | default('1000') }}
       - TZ=America/Chicago
     volumes:
-      # FIXED: Config lives in the Backup Zone
       - {{ docker_dir }}/media/config/radarr:/config
-      # DATA: Media lives in the Storage Zone
       - {{ media_base_path }}/data/movies:/movies
       - {{ media_base_path }}/data/downloads:/downloads
     networks:
@@ -54,9 +50,7 @@ services:
       - PGID={{ ansible_user_gid | default('1000') }}
       - TZ=America/Chicago
     volumes:
-      # FIXED: Config lives in the Backup Zone
       - {{ docker_dir }}/media/config/sabnzbd:/config
-      # DATA: Media lives in the Storage Zone
       - {{ media_base_path }}/data/downloads:/downloads
     networks:
       - vault_net
@@ -66,6 +60,29 @@ services:
       - "traefik.http.routers.sabnzbd.entrypoints=web"
       - "traefik.http.routers.sabnzbd.middlewares=vault-auth@docker"
       - "traefik.http.services.sabnzbd.loadbalancer.server.port=8080"
+
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+    environment:
+      - PUID={{ ansible_user_uid | default('1000') }}
+      - PGID={{ ansible_user_gid | default('1000') }}
+      - TZ=America/Chicago
+    volumes:
+      - {{ docker_dir }}/media/config/homarr/configs:/app/data/configs
+      - {{ docker_dir }}/media/config/homarr/icons:/app/public/icons
+      - {{ docker_dir }}/media/config/homarr/data:/data
+      # REQUIRED: Docker Socket for automatic scanning
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - vault_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homarr.rule=Host(`homarr.vault.local`)"
+      - "traefik.http.routers.homarr.entrypoints=web"
+      - "traefik.http.routers.homarr.middlewares=vault-auth@docker"
+      - "traefik.http.services.homarr.loadbalancer.server.port=7575"
 
 networks:
   vault_net:
