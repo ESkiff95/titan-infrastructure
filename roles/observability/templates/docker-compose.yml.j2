@@ -6,21 +6,21 @@ services:
   # ==========================================
   prometheus:
     image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
     container_name: prometheus
+    user: "1000:1000"
+    network_mode: host
     restart: unless-stopped
     volumes:
-      # FIXED: Use global docker_dir
       - {{ docker_dir }}/observability/config/prometheus.yml:/etc/prometheus/prometheus.yml
       - {{ docker_dir }}/observability/prometheus_data:/prometheus
+      - ./config/alerts.yml:/etc/prometheus/alerts.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
-    networks:
-      - vault_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.prometheus.rule=Host(`prometheus.vault.local`)"
@@ -31,11 +31,10 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - "3002:3000"
     container_name: grafana
     restart: unless-stopped
     volumes:
-      # FIXED: Use global docker_dir
       - {{ docker_dir }}/observability/grafana_data:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}
@@ -55,9 +54,8 @@ services:
     container_name: alertmanager
     restart: unless-stopped
     volumes:
-      # FIXED: Use global docker_dir
       - {{ docker_dir }}/observability/config/alertmanager.yml:/etc/alertmanager/alertmanager.yml
-      - {{ docker_dir }}/observability/config/discord_template.yml:/etc/alertmanager/discord_template.yml
+      - {{ docker_dir }}/observability/config/discord.tmpl:/etc/alertmanager/templates/discord.tmpl
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
     networks:
@@ -69,10 +67,11 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
+    ports:
+      - "9100:9100"
     restart: unless-stopped
     hostname: titan-core-01
     volumes:
-      # NOTE: These are System Mounts, keep as is
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
@@ -86,9 +85,10 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
+    ports:
+      - "8081:8080"
     restart: unless-stopped
     volumes:
-      # NOTE: These are System Mounts, keep as is
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
@@ -104,8 +104,9 @@ services:
     image: louislam/uptime-kuma:1
     container_name: uptime-kuma
     restart: unless-stopped
+    ports:
+      - "3001:3001"
     volumes:
-      # FIXED: Use global docker_dir (This prevents the wipe issue)
       - {{ docker_dir }}/observability/data/uptime-kuma:/app/data
     networks:
       - vault_net
@@ -121,7 +122,6 @@ services:
     container_name: gotify
     restart: unless-stopped
     volumes:
-      # FIXED: Use global docker_dir
       - {{ docker_dir }}/observability/data/gotify:/app/data
     environment:
       - GOTIFY_DEFAULTUSER_PASS={{ gotify_admin_password }}

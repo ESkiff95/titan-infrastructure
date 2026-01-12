@@ -1,0 +1,6 @@
+---
+- name: Restart Aurum
+  community.docker.docker_compose_v2:
+    project_src: /opt/project_aurum
+    state: restarted
+  become: true

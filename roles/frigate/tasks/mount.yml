@@ -1,0 +1,33 @@
+---
+- name: Ensure Mount Point Exists
+  file:
+    path: /media/frigate
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create Systemd Mount Unit
+  copy:
+    dest: /etc/systemd/system/media-frigate.mount
+    content: |
+      [Unit]
+      Description=External Frigate Storage
+      After=network.target
+
+      [Mount]
+      What=/dev/disk/by-uuid/9de7c3e5-fec7-4f90-b420-1b9c104b76e9
+      Where=/media/frigate
+      Type=ext4
+      Options=defaults
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: '0644'
+  notify: Reload Systemd
+
+- name: Enable and Start Mount
+  systemd:
+    name: media-frigate.mount
+    state: started
+    enabled: yes

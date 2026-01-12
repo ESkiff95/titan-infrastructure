@@ -1,2 +1,6 @@
 - name: Restart Frigate
   ansible.builtin.command: docker restart titan_sentry
+
+- name: Reload Systemd
+  systemd:
+    daemon_reload: yes

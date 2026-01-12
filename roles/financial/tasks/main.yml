@@ -1,6 +1,33 @@
 ---
-- name: Deploy Project Aurum
+- name: Ensure Application Directory Exists
+  file:
+    path: /opt/project_aurum
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: docker
+  become: true
+
+- name: Copy Application Source Code
   copy:
     src: project_aurum/
     dest: /opt/project_aurum/
     mode: '0755'
+    directory_mode: '0755'
+  become: true
+
+- name: Deploy Docker Compose Configuration
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/project_aurum/docker-compose.yml
+    mode: '0640'
+  become: true
+  notify: Restart Aurum  # Requires a handler (optional for now)
+
+- name: Launch Project Aurum Stack
+  community.docker.docker_compose_v2:
+    project_src: /opt/project_aurum
+    state: present
+    build: always
+    pull: always
+  become: true

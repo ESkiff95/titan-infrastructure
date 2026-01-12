@@ -15,7 +15,7 @@
     group: "{{ item.group }}"
     mode: '0755'
   loop:
-    - { path: "{{ deploy_root }}/observability/prometheus_data", owner: "65534", group: "65534" }
+    - { path: "{{ deploy_root }}/observability/prometheus_data", owner: "1000", group: "1000" }
     - { path: "{{ deploy_root }}/observability/grafana_data", owner: "472", group: "472" }
     - { path: "{{ deploy_root }}/observability/data/gotify", owner: "{{ ansible_user }}", group: "{{ ansible_user }}" }
     - { path: "{{ deploy_root }}/observability/data/uptime-kuma", owner: "{{ ansible_user }}", group: "{{ ansible_user }}" }
@@ -37,6 +37,15 @@
     owner: "65534"
     group: "65534"
     mode: '0644'
+
+- name: Deploy Alert Rules
+  template:
+    src: alerts.yml.j2
+    dest: "{{ deploy_root }}/observability/config/alerts.yml"
+    owner: "65534"
+    group: "65534"
+    mode: '0644'
+  notify: Restart Monitoring Stack
 
 - name: Deploy Prometheus Config
   template:

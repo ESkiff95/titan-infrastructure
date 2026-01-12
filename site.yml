@@ -42,7 +42,7 @@
       tags: ['dns', 'network']
 
     - role: observability
-      tags: ['monitor']
+      tags: ['observability', 'monitor']
 
     - role: financial
       tags: ['app', 'aurum']
