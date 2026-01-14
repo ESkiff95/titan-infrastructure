@@ -87,7 +87,7 @@
 
 - name: "STEP 6: AIRLOCK - Block Thunderdome from Family LAN"
   ansible.posix.firewalld:
-    rich_rule: 'rule family="ipv4" source address="172.16.99.0/24" destination address="192.168.1.0/24" drop'
+    rich_rule: 'rule family="ipv4" source address="172.16.99.0/24" destination address="{{ lan_subnet }}" drop'
     zone: libvirt
     permanent: yes
     state: enabled

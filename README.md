@@ -19,8 +19,8 @@ To establish a resilient, version-controlled infrastructure ("The Vault") capabl
 
 | Node Name | Role | IP Address | OS | Mission |
 | :--- | :--- | :--- | :--- | :--- |
-| **TITAN (Core)** | Fortress | `192.168.1.240` | Linux | Central Compute, Databases, Document Archival (Paperless), Security Scanning (GVM). |
-| **SENTRY (Edge)** | Watchtower | `192.168.1.84` | Ubuntu (Mac) | NVR (Frigate), Object Detection, Perimeter Defense. |
+| **TITAN (Core)** | Fortress | `172.x.x.x` | Linux | Central Compute, Databases, Document Archival (Paperless), Security Scanning (GVM). |
+| **SENTRY (Edge)** | Watchtower | `172.x.x.x` | Ubuntu (Mac) | NVR (Frigate), Object Detection, Perimeter Defense. |
 
 ---
 

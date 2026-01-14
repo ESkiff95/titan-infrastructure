@@ -27,8 +27,6 @@ services:
       - "traefik.http.routers.dashboard.rule=Host(`traefik.vault.local`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.entrypoints=web"
-      - "traefik.http.middlewares.prom-auth.basicauth.users={{ traefik_auth }}"
-      - "traefik.http.middlewares.vault-auth.basicauth.users={{ traefik_auth }}"
 
 networks:
   vault_net:

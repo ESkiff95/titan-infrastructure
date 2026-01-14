@@ -25,7 +25,7 @@
 
 # ==========================================
 # PLAY 2: TITAN CORE OPERATIONS (CORE ONLY)
-# Target: Titan (192.168.1.240)
+# Target: Titan (172.x.x.x)
 # Mission: Heavy Compute, Storage, Analysis
 # ==========================================
 - name: TITAN CORE OPERATIONS
@@ -50,12 +50,12 @@
     - role: media
       tags: ['app', 'media']
 
-    - role: smarthome
-      tags: ['hass', 'mqtt']
+    - role: homeassistant
+      tags: ['hass', 'mqtt', 'homeassistant']
 
 # ==========================================
 # PLAY 3: SENTRY OPERATIONS (EDGE ONLY)
-# Target: Sentry (192.168.1.84)
+# Target: Sentry (172.x.x.x)
 # Mission: Computer Vision & NVR
 # ==========================================
 - name: SENTRY EDGE OPERATIONS

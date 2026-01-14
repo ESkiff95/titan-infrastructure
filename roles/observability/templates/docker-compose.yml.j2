@@ -120,6 +120,8 @@ services:
   gotify:
     image: gotify/server
     container_name: gotify
+    ports:
+      - "8086:80"
     restart: unless-stopped
     volumes:
       - {{ docker_dir }}/observability/data/gotify:/app/data

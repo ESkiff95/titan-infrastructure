@@ -1,0 +1,16 @@
+- name: Ensure Home Assistant Config Directory Exists
+  file:
+    path: /opt/homeassistant/config
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: '0755'
+
+- name: Copy Home Assistant Configuration
+  copy:
+    src: configuration.yaml
+    dest: "/opt/homeassistant/config/configuration.yaml"
+    owner: "1000"
+    group: "1000"
+    mode: '0644'
+  notify: Restart Home Assistant

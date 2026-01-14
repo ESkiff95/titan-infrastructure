@@ -10,7 +10,7 @@ services:
       - DB_HOST=postgres
       - DB_NAME=aurum_db
       - DB_USER=titan
-      - DB_PASS=titan_secure_password
+      - DB_PASS={{ project_aurum_db_password }}
     depends_on:
       - postgres
 

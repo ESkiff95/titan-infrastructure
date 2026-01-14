@@ -26,12 +26,12 @@ scrape_configs:
           instance: 'titan-core-01'  # Force a pretty name
 
       # 2. SENTRY EDGE (Remote)
-      - targets: ['192.168.1.84:9100']
+      - targets: ['{{ host_ip_media_server }}:9100']
         labels:
           instance: 'sentry-edge'    # Force a pretty name
 
       # 3. RESERVE NODE (Remote)
-      - targets: ['192.168.1.251:9100']
+      - targets: ['{{ host_ip_backup_node }}:9100']
         labels:
           instance: 'reserve-node'   # Force a pretty name
 
@@ -42,10 +42,10 @@ scrape_configs:
         labels:
           instance: 'titan-core-01'
 
-      - targets: ['192.168.1.84:8080']
+      - targets: ['{{ host_ip_sentry }}:8080']
         labels:
           instance: 'sentry-edge'
 
-      - targets: ['192.168.1.251:8080']
+      - targets: ['{{ host_ip_reserve }}:8080']
         labels:
           instance: 'reserve-node'

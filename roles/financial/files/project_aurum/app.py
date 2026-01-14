@@ -15,7 +15,7 @@ from sqlalchemy import create_engine, text
 DB_HOST = os.getenv('DB_HOST', 'localhost')
 DB_NAME = os.getenv('DB_NAME', 'aurum_db')
 DB_USER = os.getenv('DB_USER', 'titan')
-DB_PASS = os.getenv('DB_PASS', 'titan_secure_password')
+DB_PASS = os.getenv('DB_PASS', 'dev_password_placeholder')
 
 db_url = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:5432/{DB_NAME}"
 engine = create_engine(db_url)

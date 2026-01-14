@@ -43,7 +43,7 @@
     content: |
       #!/bin/bash
       # Ping the Gateway (Router)
-      TARGET="192.168.1.1"
+    TARGET="{{ gateway_ip }}"
       
       # If Ping fails (silently)
       if ! ping -c 1 $TARGET > /dev/null 2>&1; then
